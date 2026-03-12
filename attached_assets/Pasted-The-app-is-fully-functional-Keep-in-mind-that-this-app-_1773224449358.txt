@@ -1,0 +1,137 @@
+The app is fully functional. Keep in mind that this app will be tranformed in mobile app. 
+ I need you to add the complete authentication, settings, and monetization system. Here is everything that needs to be built:
+
+---
+
+## PART 1 — AUTHENTICATION SYSTEM
+
+### Screens to create:
+1. **Splash / Onboarding screen** — shown only on first launch, 2-3 slides explaining the app, with a "Get Started" button
+2. **Sign Up screen** — fields: name, email, password, confirm password. Include Google Sign-In button. Show password strength indicator. Terms & Privacy checkbox.
+3. **Log In screen** — email + password. "Forgot password?" link. Google Sign-In button.
+4. **Forgot Password screen** — email input, sends reset link, confirmation message shown.
+5. **Email Verification screen** — shown after sign up, prompt to verify email, resend button.
+
+### Backend / Logic:
+- Use Firebase Authentication (email/password + Google OAuth)
+- Store user profile in Firestore: { uid, name, email, createdAt, subscriptionPlan, subscriptionExpiry }
+- Persist login state — user stays logged in across app restarts
+- Redirect logged-in users directly to the main app screen
+- Redirect unauthenticated users to Login screen
+
+---
+
+## PART 2 — SUBSCRIPTION & PAYMENTS
+
+### Plans to implement:
+
+**FREE plan:**
+- 10 tasks per week (hard limit — when reached, show upgrade prompt)
+- Basic reminders
+- Basic events
+
+
+**PRO plan — $8.99/month or $71.99/year (save ~33%):**
+- Unlimited reminders
+- Unlimited events
+- Unlimited notes
+- Auto-structured notes
+- Recurring scheduling
+
+
+
+### Paywall Screen:
+- Show the two plans stacked vertically (one card per plan, full width) — optimized for mobile
+- Monthly / Yearly toggle at the top
+- FREE card: shows current limitations clearly, especially "10 tasks/week"
+- PRO card: highlighted with accent color, shows all benefits, emphasizes "Unlimited tasks"
+- Big CTA button: "Upgrade to Pro"
+- Below CTA: "Restore purchases" text link
+- Show price per month prominently; if yearly selected, show monthly equivalent + total billed + savings badge
+- No side-by-side layout — single column, scrollable if needed
+
+### Subscription management screen (inside Settings):
+- Shows current plan name and renewal date
+- Upgrade button (if on Free)
+- Cancel subscription option
+- Restore purchases button
+
+### Payment integration:
+- Use **RevenueCat** SDK for managing subscriptions (works for both iOS and Android)
+- Connect RevenueCat to App Store and Google Play in-app purchases
+- Implement purchase flow, restore purchases, and receipt validation
+- On successful purchase: update Firestore user document with plan + expiry
+- Show confirmation screen after successful purchase
+
+---
+
+## PART 3 — SETTINGS SCREEN
+
+Create a full Settings screen accessible from the main navigation. Sections:
+
+### Account
+- Profile photo (upload from gallery)
+- Edit name
+- Edit email (requires re-authentication)
+- Change password
+- Connected accounts (Google)
+- Delete account (with confirmation dialog)
+
+### Subscription
+- Current plan display
+- Upgrade button (if on Free)
+- Manage subscription
+- Restore purchases
+
+### Notifications
+- Toggle: Enable/disable all notifications
+- Toggle: Reminders
+- Toggle: Daily summary (when user click that notification, it redirect to today page)
+- Toggle: Event alerts
+- Time picker: Default reminder time before events
+
+### Appearance
+- Theme: Light / Dark / System default
+- Accent color picker (5-6 color options)
+- Font size: Small / Medium / Large
+
+### Data & Privacy
+- Export my data (JSON download)
+- Clear all data (with confirmation)
+- Privacy policy link
+- Terms of service link
+
+### Support
+- Rate the app (redirects to store)
+- Send feedback (opens email)
+- Help center link
+- App version display
+
+---
+
+## PART 4 — FEATURE GATING
+
+Implement logic throughout the existing app:
+- Track how many tasks the user has created in the current week (reset every Monday)
+- If Free user tries to add an 11th task in the same week → show Paywall screen with message: "You've reached your 10 tasks/week limit. Upgrade to Pro for unlimited tasks."
+- If Free user tries to create a recurring event → show Paywall screen
+- Add a subtle lock icon on locked features
+- Show a small weekly task counter for Free users (e.g., "7/10 tasks used this week") somewhere visible in the main task screen
+- After successful subscription, unlock all features immediately without restart
+
+---
+
+## PART 5 — TECHNICAL REQUIREMENTS
+
+- All new screens must match the existing app's design language (same colors, fonts, component styles)
+- Use the same navigation pattern already in the app
+- All forms must have proper validation with error messages
+- Loading states on all async operations (login, purchase, save)
+- Error handling with user-friendly messages (no raw error codes shown)
+- All text must be in English
+- Make sure back navigation works correctly on Android (back button)
+- If unauthenticated user opens a notification, redirect to login then back to intended screen after login
+
+---
+
+Please implement all of this step by step, starting with Part 1 (Authentication), then Part 2 (Payments), then Part 3 (Settings), then Parts 4 and 5. After each part, confirm what was completed before moving to the next.

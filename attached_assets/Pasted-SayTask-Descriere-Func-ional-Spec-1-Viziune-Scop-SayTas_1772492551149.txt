@@ -1,0 +1,88 @@
+SayTask — Descriere Funcțională (Spec)
+1) Viziune & Scop
+SayTask este o aplicație voice-first pentru programări, remindere și notițe structurate. Utilizatorul vorbește/scrie/atașează (poză sau PDF), iar app-ul:
+* înțelege intenția (Reminder / Calendar Event / Note),
+* normalizează conținutul (titlu scurt, date/ore standardizate),
+* creează automat itemul potrivit,
+* notifică la momentul optim (push + opțional voice call),
+* sincronizează cu Google Calendar, iOS Calendar și un calendar intern,
+* conversează și prin WhatsApp bot (bidirecțional).
+2) Inputuri acceptate
+* Voice (buton „Speak” prezent pe Home și în navbar, persistent).
+* Text (câmp pe Home).
+* Atașamente (poză / PDF: bilete avion/tren/concert, programări etc.).
+* WhatsApp bot (mesaje text/audio & atașamente; sincronizare cu app).
+3) Clasificarea AI a intenției
+Pipeline AI (un singur endpoint „Parse Intent”):
+1. Intent type: REMINDER | EVENT | NOTE.
+2. Entities: titlu scurt, dată/ora (absolută sau relativă: „în 2 ore”), locație, participanți (dacă există), sursă (WhatsApp / App).
+3. Confidence + explicație scurtă (pentru fallback).
+4. Note structuring (doar pentru NOTE): bullet points, headings, rezumat, + „transcript original”.
+Reguli de separare:
+* Conține timp relativ/absolut → REMINDER sau EVENT.
+* Conține oră + durată/locație/descriere → EVENT.
+* Fără referințe temporale → NOTE.
+4) Normalizare & Titluri
+* Titlu scurt (max 60 caractere): extrage subiectul („Tuns” nu „Am programare la tuns la ora 2 azi la centrul X”).
+* Data/ora:
+    * Aproape de prezent: afișează Today / Tomorrow + oră.
+    * Mai departe: format scurt „Sept 18, 14:00” (nu 18.09.2025).
+* Durată: dacă lipsește la EVENT, fallback implicit (ex. 30–60 min în funcție de tip: „Tuns” 45 min, „Zbor” conform bilet).
+* Locație: din text/atașament (ex. aeroport, sală).
+* Reminder: default + opțiuni rapide (ex. -15m, -1h, -1d).
+5) UI & Fluxuri
+Home (primar)
+* Speak (mare, central) + Text field + Attachment.
+* La STOP → Pop-up de confirmare:
+    * Titlu (scurt, generat de AI).
+    * Transcript original (toggle).
+    * Tip (Reminder/Event/Note) + data/ora (sau „No time” pentru Note).
+    * Chip-uri acțiuni rapide: Done, Edit, Delete.
+    * Iconițe reminder: 🔔 (push), 📞 (voice call) — toggles.
+    * Expand → „Task Details” (start/end, repeat, add reminder, add tag, notes, location, participants).
+* Dacă inputul vine din WhatsApp, afișează insigna „via WhatsApp”.
+Today
+* Toate item-urile din ziua curentă (inclusiv cele importate din calendare).
+* Design aerisit, time blocks cronologice.
+* Card item:
+    * Titlu scurt, oră, chips (calendar source), reminder on/off, call on/off.
+    * Tap → „Task Details” (identic cu pop-up-ul Home > Expand).
+* Quick actions (swipe): Done / Reschedule / Delete.
+Calendar
+* Calendar lună/săptămână.
+* Select zi → listă de evenimente în acea zi.
+* Pentru ziua curentă, în header: „Today • N events” + buton „Open Today page”.
+Notes
+* Listă notițe structurate de AI:
+    * Titlu (extras din idee).
+    * Rezumat (2–3 bullets).
+    * Transcript original (toggle).
+* Categorii auto (AI tags): „Idei”, „De făcut”, „Personal”, „Business”, „Cumpărături” etc. + căutare & filtre.
+* Convert-to-Task/Event (un buton care extrage timp dacă userul îl adaugă atunci).
+6) Atașamente inteligente
+* Boarding pass / Bilet concert / Tren (poză sau PDF):
+    * Extrage nume eveniment, dată, oră, loc, număr zbor/tren, cod rezervare.
+    * Creează EVENT cu detalii + remindere implicite (ex: -24h, -2h, -45m).
+7) WhatsApp Bot (bidirecțional)
+* Mesaj „programare tuns la 2 azi” → app creează EVENT și îl afișează în Home/Today.
+* Modificări în app → notificare confirmare în WhatsApp („Event updated: Tuns, 14:00, today.”).
+* Acceptă și voice note: STT + același pipeline AI.
+8) Notificări
+* Push: standard, cu acțiuni (Snooze 10m, Mark done, Open).
+* Voice call (opțional): app inițiază apel de tip VoIP la ora reminderului; buton „Enable voice calls” în settings per task / global.
+9) Integrare Calendar
+* Google Calendar și iOS Calendar (permisiuni granular): read/write bidirecțional.
+* Calendar intern (default pentru utilizatori fără integrări).
+* Conflict handling (dubluri, confluențe orare) cu banner: „Possible conflict with ‘Dentist 14:00–14:30’.”
+10) Date Model (simplificat)
+* Item { id, type, title, description, transcript, start_at, end_at, timezone, location, participants[], reminders[], tags[], source(app|whatsapp|attachment), attachmentRefs[], created_by, created_at, updated_at, external_ids { google?, ios? } }
+* Reminder { type(push|call), offsetMinutes, isEnabled }
+* Note { structuredContent, transcript }
+11) Edge cases & Reguli
+* Ambiguitate temporală („joi la 2” fără context, azi e miercuri) → întreabă în pop-up „This Thu (Sept 18) or next Thu (Sept 25)?”.
+* Timp relativ fără tip („în 2 ore”) → REMINDER implicit, titlu din subiect.
+* Mesaj lung dezordonat → taie la esență, păstrează transcript separat.
+* Fus orar în atașamente → normalizează la timezone utilizator.
+12) Securitate & Confidențialitate
+* Permisiuni explicite pentru integrări calendar, microfon, notificări, VoIP.
+* Criptare la rest & în tranzit. Redactare date sensibile în logs (ex. cod rezervare).
