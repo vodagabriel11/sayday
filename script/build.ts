@@ -59,6 +59,9 @@ async function buildAll() {
     external: externals,
     logLevel: "info",
   });
+  const { copyFile } = await import("fs/promises");
+  await copyFile("node_modules/connect-pg-simple/table.sql", "dist/table.sql");
+  console.log("copied table.sql to dist");
 }
 
 buildAll().catch((err) => {
