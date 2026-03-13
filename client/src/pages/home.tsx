@@ -428,7 +428,7 @@ export default function Home() {
     },
     onError: (err: any) => {
       const msg = err.message || "";
-      if (msg.includes("WEEKLY_LIMIT_REACHED") || msg.includes("10 tasks/week")) {
+      if (msg.includes("WEEKLY_LIMIT_REACHED") || msg.includes("50 tasks/week")) {
         setShowLimitDialog(true);
       } else if (msg.includes("PRO_FEATURE") || msg.includes("Pro feature")) {
         setShowLimitDialog(true);
@@ -488,16 +488,16 @@ export default function Home() {
     if (!item.startAt) return { time: null, title: item.title };
     const date = new Date(item.startAt);
     const now = new Date();
-    const dateDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-    const nowDay = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+    const dateDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const diffDays = Math.round((dateDay.getTime() - nowDay.getTime()) / 86400000);
-    const h = date.getUTCHours();
-    const m = date.getUTCMinutes();
+    const h = date.getHours();
+    const m = date.getMinutes();
     const is24h = typeof window !== "undefined" && localStorage.getItem("sayday_time_format") === "24h";
     const timeStr = is24h
       ? `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`
       : `${(h % 12 || 12)}:${m.toString().padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
-    const dayLabel = diffDays === 0 ? 'Today' : diffDays === 1 ? 'Tomorrow' : date.toLocaleDateString([], { month: 'short', day: 'numeric', timeZone: 'UTC' });
+    const dayLabel = diffDays === 0 ? 'Today' : diffDays === 1 ? 'Tomorrow' : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
     return { time: timeStr, day: dayLabel, title: item.title };
   };
 
@@ -787,6 +787,21 @@ export default function Home() {
           )}
         </div>
       </div>
+      {weeklyTasks && weeklyTasks.limit !== null && (
+        <div className="w-full max-w-lg px-1 pb-4">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[11px] text-muted-foreground">Free plan</span>
+            <span className="text-[11px] text-muted-foreground font-medium">{weeklyTasks.count}/{weeklyTasks.limit} tasks this week</span>
+          </div>
+          <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+            <div
+              className="h-full bg-primary rounded-full transition-all"
+              style={{ width: `${Math.min(100, (weeklyTasks.count / weeklyTasks.limit) * 100)}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       {current && showEditDialog && (
         <ConfirmEditSheet
           data={current}
@@ -805,7 +820,7 @@ export default function Home() {
             <div>
               <h3 className="text-lg font-bold" data-testid="text-limit-title">Weekly Limit Reached</h3>
               <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed" data-testid="text-limit-desc">
-                You've used all 10 free tasks this week. Upgrade to Pro for unlimited tasks.
+                You've used all 50 free tasks this week. Upgrade to Pro for unlimited tasks.
               </p>
             </div>
             <div className="flex flex-col gap-2 w-full">

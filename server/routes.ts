@@ -70,6 +70,10 @@ export async function registerRoutes(
         }
       }
 
+      if (data.type === "note" && !data.color) {
+        data.color = "emerald";
+      }
+
       const item = await storage.createItem(data);
       await storage.incrementWeeklyTaskCount(userId);
 

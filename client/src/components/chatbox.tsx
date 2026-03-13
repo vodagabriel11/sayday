@@ -402,7 +402,7 @@ export function Chatbox({ open, onClose, onNavigateToNote }: ChatboxProps) {
     onError: (err: any) => {
       const msg = err.message || "";
       let errText = "Could not save item. Try again.";
-      if (msg.includes("WEEKLY_LIMIT_REACHED") || msg.includes("10 tasks/week")) {
+      if (msg.includes("WEEKLY_LIMIT_REACHED") || msg.includes("50 tasks/week")) {
         errText = "You've reached your 50 tasks/week limit. Upgrade to Pro for unlimited tasks.";
       } else if (msg.includes("PRO_FEATURE")) {
         errText = "This feature requires a Pro subscription.";

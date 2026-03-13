@@ -443,34 +443,99 @@ function NotificationsScreen({ onBack }: { onBack: () => void }) {
   );
 }
 
+const ACCENT_COLORS = [
+  { key: "green", label: "Green", swatch: "bg-green-500" },
+  { key: "blue", label: "Blue", swatch: "bg-blue-500" },
+  { key: "purple", label: "Purple", swatch: "bg-purple-500" },
+  { key: "orange", label: "Orange", swatch: "bg-orange-500" },
+  { key: "pink", label: "Pink", swatch: "bg-pink-500" },
+  { key: "red", label: "Red", swatch: "bg-red-500" },
+];
+
+const FONT_SIZES = [
+  { key: "small", label: "Small" },
+  { key: "medium", label: "Medium" },
+  { key: "large", label: "Large" },
+];
+
 function AppearanceScreen({ onBack }: { onBack: () => void }) {
   const { theme, setTheme } = useTheme();
+  const { user } = useAuth();
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("PATCH", "/api/auth/profile", data);
+      return res.json();
+    },
+    onSuccess: (data) => { queryClient.setQueryData(["/api/auth/me"], data); },
+  });
 
   return (
     <>
       <SubScreenHeader title="Display & Theme" onBack={onBack} />
 
-      <div className="mt-2">
-        <p className="text-sm font-medium text-foreground mb-3 px-1">Theme</p>
-        <div className="flex gap-2">
-          {[
-            { value: "light" as const, icon: Sun, label: "Light" },
-            { value: "dark" as const, icon: Moon, label: "Dark" },
-            { value: "system" as const, icon: Monitor, label: "System" },
-          ].map(t => (
-            <button
-              key={t.value}
-              onClick={() => setTheme(t.value)}
-              className={cn(
-                "flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl border-2 transition-all text-xs font-medium",
-                theme === t.value ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground"
-              )}
-              data-testid={`theme-${t.value}`}
-            >
-              <t.icon className="w-5 h-5" />
-              {t.label}
-            </button>
-          ))}
+      <div className="mt-2 space-y-6">
+        <div>
+          <p className="text-sm font-medium text-foreground mb-3 px-1">Theme</p>
+          <div className="flex gap-2">
+            {[
+              { value: "light" as const, icon: Sun, label: "Light" },
+              { value: "dark" as const, icon: Moon, label: "Dark" },
+              { value: "system" as const, icon: Monitor, label: "System" },
+            ].map(t => (
+              <button
+                key={t.value}
+                onClick={() => setTheme(t.value)}
+                className={cn(
+                  "flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl border-2 transition-all text-xs font-medium",
+                  theme === t.value ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground"
+                )}
+                data-testid={`theme-${t.value}`}
+              >
+                <t.icon className="w-5 h-5" />
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-sm font-medium text-foreground mb-3 px-1">Accent Color</p>
+          <div className="flex gap-3 flex-wrap">
+            {ACCENT_COLORS.map(c => (
+              <button
+                key={c.key}
+                onClick={() => updateProfileMutation.mutate({ accentColor: c.key })}
+                className="flex flex-col items-center gap-1"
+                data-testid={`accent-${c.key}`}
+              >
+                <div className={cn(
+                  "w-9 h-9 rounded-full transition-all border-2",
+                  c.swatch,
+                  user?.accentColor === c.key ? "border-foreground scale-110" : "border-transparent"
+                )} />
+                <span className="text-[10px] text-muted-foreground">{c.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-sm font-medium text-foreground mb-3 px-1">Font Size</p>
+          <div className="flex gap-2">
+            {FONT_SIZES.map(f => (
+              <button
+                key={f.key}
+                onClick={() => updateProfileMutation.mutate({ fontSize: f.key })}
+                className={cn(
+                  "flex-1 py-2.5 rounded-xl border-2 transition-all text-sm font-medium",
+                  user?.fontSize === f.key ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground"
+                )}
+                data-testid={`fontsize-${f.key}`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </>

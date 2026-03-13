@@ -101,8 +101,8 @@ export function VoiceConfirmationSheet({ open, onClose, parsedData, transcript }
     },
     onError: (err: any) => {
       const msg = err.message || "";
-      if (msg.includes("WEEKLY_LIMIT_REACHED") || msg.includes("10 tasks/week")) {
-        toast({ title: "Task Limit Reached", description: "You've used all 10 free tasks this week. Upgrade to Pro for unlimited tasks.", variant: "destructive" });
+      if (msg.includes("WEEKLY_LIMIT_REACHED") || msg.includes("50 tasks/week")) {
+        toast({ title: "Task Limit Reached", description: "You've used all 50 free tasks this week. Upgrade to Pro for unlimited tasks.", variant: "destructive" });
       } else if (msg.includes("PRO_FEATURE")) {
         toast({ title: "Pro Feature", description: "This feature requires a Pro subscription.", variant: "destructive" });
       } else {
@@ -163,10 +163,10 @@ export function VoiceConfirmationSheet({ open, onClose, parsedData, transcript }
                       Call Me
                     </button>
                     <button
-                      onClick={() => setEditData({ ...current, notificationType: "push" })}
+                      onClick={() => setEditData({ ...current, notificationType: "vibrate" })}
                       className={cn(
                         "flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full border transition-all",
-                        current.notificationType === "push"
+                        current.notificationType === "vibrate"
                           ? "border-primary bg-primary/10 text-primary font-medium"
                           : "border-border text-muted-foreground hover:border-gray-300"
                       )}
