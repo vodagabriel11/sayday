@@ -62,8 +62,8 @@ export async function registerRoutes(
 
       if (req.user!.subscriptionPlan === "free") {
         const weeklyCount = await storage.getWeeklyTaskCount(userId);
-        if (weeklyCount >= 10) {
-          return res.status(403).json({ error: "WEEKLY_LIMIT_REACHED", message: "You've reached your 10 tasks/week limit. Upgrade to Pro for unlimited tasks." });
+        if (weeklyCount >= 50) {
+          return res.status(403).json({ error: "WEEKLY_LIMIT_REACHED", message: "You've reached your 50 tasks/week limit. Upgrade to Pro for unlimited tasks." });
         }
         if (data.recurringInterval) {
           return res.status(403).json({ error: "PRO_FEATURE", message: "Recurring events are a Pro feature. Upgrade to unlock." });

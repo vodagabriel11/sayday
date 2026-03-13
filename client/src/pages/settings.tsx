@@ -258,7 +258,7 @@ function SubscriptionScreen({ onBack }: { onBack: () => void }) {
   const savings = Math.round((1 - yearlyPrice / (monthlyPrice * 12)) * 100);
 
   const FREE_FEATURES = [
-    "10 tasks per week",
+    "50 tasks per week",
     "Basic reminders",
     "Basic events",
   ];

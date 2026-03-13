@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
 const FREE_FEATURES = [
-  "10 tasks per week",
+  "50 tasks per week",
   "Basic reminders",
   "Basic events",
 ];
