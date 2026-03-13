@@ -21,7 +21,7 @@ import PlanSelection from "@/pages/plan-selection";
 import { Chatbox } from "@/components/chatbox";
 import { AlarmOverlay } from "@/components/alarm-overlay";
 import { VoiceConfirmationSheet } from "@/components/voice-confirmation-sheet";
-import { alarmService } from "@/lib/alarm-service";
+import { alarmService, unlockAudio } from "@/lib/alarm-service";
 import {
   scheduleItemNotifications,
   cancelAllItemNotifications,
@@ -431,6 +431,16 @@ function AppRoutes() {
 }
 
 function App() {
+  useEffect(() => {
+    const unlock = () => { unlockAudio(); };
+    document.addEventListener("touchstart", unlock, { once: true, passive: true });
+    document.addEventListener("click", unlock, { once: true });
+    return () => {
+      document.removeEventListener("touchstart", unlock);
+      document.removeEventListener("click", unlock);
+    };
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

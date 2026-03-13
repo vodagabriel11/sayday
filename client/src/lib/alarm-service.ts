@@ -15,9 +15,38 @@ export type AlarmMode = "call" | "vibrate";
 type AlarmCallback = (item: AlarmItem, mode: AlarmMode) => void;
 type ReminderTypeFetcher = (itemId: number) => Promise<AlarmMode>;
 
+// Singleton AudioContext unlocked on first user interaction (iOS requirement)
+let _unlockedCtx: AudioContext | null = null;
+
+export function unlockAudio() {
+  if (_unlockedCtx) return;
+  try {
+    _unlockedCtx = new AudioContext();
+    // Play silent buffer to unlock
+    const buf = _unlockedCtx.createBuffer(1, 1, 22050);
+    const src = _unlockedCtx.createBufferSource();
+    src.buffer = buf;
+    src.connect(_unlockedCtx.destination);
+    src.start(0);
+    _unlockedCtx.resume().catch(() => {});
+  } catch {}
+}
+
+async function getAudioContext(): Promise<AudioContext | null> {
+  try {
+    const ctx = _unlockedCtx || new AudioContext();
+    if (ctx.state === "suspended") {
+      await ctx.resume();
+    }
+    return ctx;
+  } catch {
+    return null;
+  }
+}
+
 class AlarmService {
   private timers: Map<number, ReturnType<typeof setTimeout>> = new Map();
-  private audioContext: AudioContext | null = null;
+  private activeCtx: AudioContext | null = null;
   private gainNode: GainNode | null = null;
   private isPlaying = false;
   private callback: AlarmCallback | null = null;
@@ -37,19 +66,13 @@ class AlarmService {
 
   scheduleAlarm(item: AlarmItem) {
     if (!item.startAt || item.isDone) return;
-
     this.cancelAlarm(item.id);
 
     const triggerTime = new Date(item.startAt).getTime();
     if (!Number.isFinite(triggerTime)) return;
 
-    const now = Date.now();
-    const delay = triggerTime - now;
-
-    if (delay <= 0) return;
-
-    const MAX_TIMEOUT = 2147483647;
-    if (delay > MAX_TIMEOUT) return;
+    const delay = triggerTime - Date.now();
+    if (delay <= 0 || delay > 2147483647) return;
 
     const timer = setTimeout(() => {
       this.timers.delete(item.id);
@@ -68,19 +91,16 @@ class AlarmService {
   }
 
   cancelAll() {
-    this.timers.forEach((timer) => clearTimeout(timer));
+    this.timers.forEach((t) => clearTimeout(t));
     this.timers.clear();
   }
 
-  snoozeAlarm(item: AlarmItem, mode: AlarmMode, minutes: number = 5) {
-    this.stopSound();
-    this.stopVibration();
-    const snoozedItem = {
+  snoozeAlarm(item: AlarmItem, mode: AlarmMode, minutes = 5) {
+    this.stopAll();
+    this.scheduleAlarm({
       ...item,
-      _alarmMode: mode,
-      startAt: new Date(Date.now() + minutes * 60 * 1000).toISOString(),
-    };
-    this.scheduleAlarm(snoozedItem);
+      startAt: new Date(Date.now() + minutes * 60000).toISOString(),
+    });
   }
 
   syncAlarms(items: AlarmItem[]) {
@@ -103,7 +123,7 @@ class AlarmService {
     }
 
     if (mode === "call") {
-      this.playSound();
+      await this.playSound();
     } else {
       this.vibrate();
     }
@@ -113,47 +133,46 @@ class AlarmService {
     }
   }
 
-  playSound() {
+  async playSound() {
     this.stopSound();
     try {
-      this.audioContext = new AudioContext();
-      this.gainNode = this.audioContext.createGain();
-      this.gainNode.connect(this.audioContext.destination);
-      this.gainNode.gain.value = 0.3;
+      const ctx = await getAudioContext();
+      if (!ctx) return;
+
+      this.activeCtx = ctx;
+      this.gainNode = ctx.createGain();
+      this.gainNode.connect(ctx.destination);
+      this.gainNode.gain.value = 1.0;
       this.isPlaying = true;
-      this.playAlarmPattern();
-    } catch {
-      // Web Audio not supported
-    }
+      this._playPattern(ctx);
+    } catch {}
   }
 
-  private playAlarmPattern() {
-    if (!this.audioContext || !this.gainNode || !this.isPlaying) return;
+  private _playPattern(ctx: AudioContext) {
+    if (!this.isPlaying || !this.gainNode) return;
 
-    const ctx = this.audioContext;
     const now = ctx.currentTime;
 
     for (let cycle = 0; cycle < 4; cycle++) {
       const offset = cycle * 1.2;
-
       for (let beep = 0; beep < 3; beep++) {
         const osc = ctx.createOscillator();
         const env = ctx.createGain();
         osc.connect(env);
-        env.connect(this.gainNode);
+        env.connect(this.gainNode!);
         osc.frequency.value = beep === 2 ? 880 : 660;
         osc.type = "sine";
-        const start = now + offset + beep * 0.25;
-        env.gain.setValueAtTime(0, start);
-        env.gain.linearRampToValueAtTime(0.4, start + 0.02);
-        env.gain.linearRampToValueAtTime(0, start + 0.2);
-        osc.start(start);
-        osc.stop(start + 0.22);
+        const t = now + offset + beep * 0.25;
+        env.gain.setValueAtTime(0, t);
+        env.gain.linearRampToValueAtTime(1.0, t + 0.02);
+        env.gain.linearRampToValueAtTime(0, t + 0.2);
+        osc.start(t);
+        osc.stop(t + 0.22);
       }
     }
 
     if (this.isPlaying) {
-      setTimeout(() => this.playAlarmPattern(), 5000);
+      setTimeout(() => this._playPattern(ctx), 5000);
     }
   }
 
@@ -162,10 +181,10 @@ class AlarmService {
 
   vibrate() {
     this.isVibrating = true;
-    this.vibratePattern();
+    this._vibratePattern();
   }
 
-  private async vibratePattern() {
+  private async _vibratePattern() {
     if (!this.isVibrating) return;
     if (Capacitor.isNativePlatform()) {
       for (let i = 0; i < 3 && this.isVibrating; i++) {
@@ -176,13 +195,13 @@ class AlarmService {
       navigator.vibrate([300, 200, 300, 200, 300]);
     }
     if (this.isVibrating) {
-      this.vibrateTimer = setTimeout(() => this.vibratePattern(), 2000);
+      this.vibrateTimer = setTimeout(() => this._vibratePattern(), 2000);
     }
   }
 
   startVibrating() {
     this.isVibrating = true;
-    this.vibratePattern();
+    this._vibratePattern();
   }
 
   stopVibration() {
@@ -191,22 +210,15 @@ class AlarmService {
       clearTimeout(this.vibrateTimer);
       this.vibrateTimer = null;
     }
-    if (navigator.vibrate) {
-      navigator.vibrate(0);
-    }
   }
 
   stopSound() {
     this.isPlaying = false;
-    if (this.audioContext) {
-      try {
-        this.audioContext.close();
-      } catch {
-        // ignore
-      }
-      this.audioContext = null;
-      this.gainNode = null;
+    if (this.activeCtx && this.activeCtx !== _unlockedCtx) {
+      try { this.activeCtx.close(); } catch {}
     }
+    this.activeCtx = null;
+    this.gainNode = null;
   }
 
   stopAll() {
@@ -214,7 +226,7 @@ class AlarmService {
     this.stopVibration();
   }
 
-  getScheduledCount(): number {
+  getScheduledCount() {
     return this.timers.size;
   }
 }

@@ -81,8 +81,9 @@ export async function scheduleItemNotifications(
       extra: { itemId: item.id, notifType: r.type },
     };
 
-    if (!isVibrate) {
-      notif.sound = "default";
+    // No sound = vibrate only; omitting sound = iOS default sound
+    if (isVibrate) {
+      notif.silent = true;
     }
 
     notifications.push(notif);
