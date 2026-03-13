@@ -204,7 +204,7 @@ export function EventDetailSheet({ item, open, onOpenChange }: EventDetailSheetP
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="max-h-[95vh] !bottom-auto !top-1/2 !-translate-y-1/2 rounded-2xl mx-auto max-w-lg !inset-x-4 overflow-y-auto z-[70]" onOpenAutoFocus={(e) => e.preventDefault()} data-testid="event-detail-sheet">
+      <SheetContent side="bottom" className="max-h-[95vh] !bottom-auto !top-1/2 !-translate-y-1/2 rounded-2xl mx-auto max-w-lg !inset-x-4 overflow-y-auto z-[70]" onOpenAutoFocus={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()} onPointerDownOutside={(e) => e.preventDefault()} data-testid="event-detail-sheet">
         <SheetHeader className="mb-5">
           <SheetTitle className="text-lg">{item.type === "reminder" ? "Reminder" : "Event"} Settings</SheetTitle>
         </SheetHeader>
@@ -223,12 +223,17 @@ export function EventDetailSheet({ item, open, onOpenChange }: EventDetailSheetP
 
           <div className="space-y-1.5">
             <Label className="text-sm font-medium">Date & Time</Label>
-            <div className="grid grid-cols-3 gap-2">
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="text-xs h-11 cursor-pointer picker-full" data-testid="input-event-date" />
-              <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="text-xs h-11 cursor-pointer picker-full" data-testid="input-event-start-time" />
-              <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} placeholder="End" className="text-xs h-11 cursor-pointer picker-full" data-testid="input-event-end-time" />
+            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="text-sm h-11 cursor-pointer w-full" data-testid="input-event-date" />
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <p className="text-[11px] text-muted-foreground">Start</p>
+                <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="text-sm h-11 cursor-pointer w-full" data-testid="input-event-start-time" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-[11px] text-muted-foreground">End (optional)</p>
+                <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="text-sm h-11 cursor-pointer w-full" data-testid="input-event-end-time" />
+              </div>
             </div>
-            <p className="text-[11px] text-muted-foreground">Start time — End time</p>
           </div>
 
           {(<>

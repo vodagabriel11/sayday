@@ -8,6 +8,7 @@ interface ItemCardProps {
   item: Item;
   onEdit?: (item: Item) => void;
   compact?: boolean;
+  pastDay?: boolean;
 }
 
 const typeConfig: Record<ItemType, { icon: typeof Calendar; color: string; bgColor: string }> = {
@@ -25,20 +26,21 @@ const itemColorConfig: Record<string, { color: string; bgColor: string }> = {
   pink: { color: "text-pink-600 dark:text-pink-400", bgColor: "bg-pink-500/10" },
 };
 
-export function ItemCard({ item, onEdit, compact = false }: ItemCardProps) {
+export function ItemCard({ item, onEdit, compact = false, pastDay = false }: ItemCardProps) {
   const [showAllBullets, setShowAllBullets] = useState(false);
   const baseConfig = typeConfig[item.type as ItemType];
   const Icon = baseConfig.icon;
   const config = (item.type === "note") ? baseConfig : (itemColorConfig[item.color || "amber"] || baseConfig);
   const hasEmoji = item.emoji && item.emoji.trim().length > 0;
+  const isDone = item.isDone || pastDay;
 
   const use24h = typeof window !== "undefined" && localStorage.getItem("sayday_time_format") === "24h";
 
   const formatTime = (date: Date | string | null) => {
     if (!date) return null;
     const d = new Date(date);
-    const h = d.getUTCHours();
-    const m = d.getUTCMinutes();
+    const h = d.getHours();
+    const m = d.getMinutes();
     if (use24h) return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
     const ampm = h >= 12 ? "PM" : "AM";
     const h12 = h % 12 || 12;
@@ -49,20 +51,20 @@ export function ItemCard({ item, onEdit, compact = false }: ItemCardProps) {
     if (!date) return null;
     const d = new Date(date);
     const now = new Date();
-    const dKey = `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
-    const nowKey = `${now.getUTCFullYear()}-${now.getUTCMonth()}-${now.getUTCDate()}`;
+    const dKey = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    const nowKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
     if (dKey === nowKey) return "Today";
-    const tomorrow = new Date(now.getTime() + 86400000);
-    const tomKey = `${tomorrow.getUTCFullYear()}-${tomorrow.getUTCMonth()}-${tomorrow.getUTCDate()}`;
+    const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const tomKey = `${tomorrow.getFullYear()}-${tomorrow.getMonth()}-${tomorrow.getDate()}`;
     if (dKey === tomKey) return "Tomorrow";
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
   return (
     <Card
       className={cn(
         "group relative transition-all duration-200 hover-elevate cursor-pointer",
-        item.isDone && "opacity-50",
+        isDone && "opacity-50",
         compact ? "p-3" : "p-4"
       )}
       onClick={() => onEdit?.(item)}
@@ -81,7 +83,7 @@ export function ItemCard({ item, onEdit, compact = false }: ItemCardProps) {
             <h3
               className={cn(
                 "font-medium text-sm truncate",
-                item.isDone && "line-through text-muted-foreground"
+                isDone && "line-through text-muted-foreground"
               )}
               data-testid={`text-title-${item.id}`}
             >

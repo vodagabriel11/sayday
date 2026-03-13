@@ -38,7 +38,7 @@ export default function CalendarPage() {
 
   const toLocalDateKey = (d: Date | string) => {
     const date = new Date(d);
-    return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   };
 
   const itemsByDate = useMemo(() => {
@@ -53,13 +53,11 @@ export default function CalendarPage() {
     return map;
   }, [allItems]);
 
-  const selUtcFake = new Date(Date.UTC(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate()));
-  const selectedDateStr = toLocalDateKey(selUtcFake);
+  const selectedDateStr = toLocalDateKey(selectedDate);
   const selectedItems = itemsByDate[selectedDateStr] || [];
 
   const today = new Date();
-  const nowUtcFake = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
-  const todayStr = toLocalDateKey(nowUtcFake);
+  const todayStr = toLocalDateKey(today);
 
   const isToday = selectedDateStr === todayStr;
 
@@ -95,7 +93,7 @@ export default function CalendarPage() {
   const formatSearchDate = (date: Date | string | null) => {
     if (!date) return "No date";
     const d = new Date(date);
-    return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
+    return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
   };
 
   const use24h = typeof window !== "undefined" && localStorage.getItem("sayday_time_format") === "24h";
@@ -103,8 +101,8 @@ export default function CalendarPage() {
   const formatSearchTime = (date: Date | string | null) => {
     if (!date) return "";
     const d = new Date(date);
-    const h = d.getUTCHours();
-    const m = d.getUTCMinutes();
+    const h = d.getHours();
+    const m = d.getMinutes();
     if (use24h) return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
     const ampm = h >= 12 ? "PM" : "AM";
     const h12 = h % 12 || 12;
@@ -164,7 +162,7 @@ export default function CalendarPage() {
                 onClick={() => {
                   if (item.startAt) {
                     const d = new Date(item.startAt);
-                    const itemDate = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+                    const itemDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
                     setSelectedDate(itemDate);
                     setCurrentDate(itemDate);
                     setSearchQuery("");
@@ -298,7 +296,7 @@ export default function CalendarPage() {
         ) : (
           <div className="space-y-2">
             {[...selectedItems].sort((a, b) => new Date(a.startAt!).getTime() - new Date(b.startAt!).getTime()).map((item) => (
-              <ItemCard key={item.id} item={item} onEdit={(it) => { setEditItem(it); setEditOpen(true); }} />
+              <ItemCard key={item.id} item={item} onEdit={(it) => { setEditItem(it); setEditOpen(true); }} pastDay={selectedDateStr < todayStr} />
             ))}
           </div>
         )}
