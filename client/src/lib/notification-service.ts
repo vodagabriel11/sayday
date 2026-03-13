@@ -20,26 +20,40 @@ export async function requestNotificationPermission(): Promise<boolean> {
 
 export async function testNotification(): Promise<void> {
   if (!Capacitor.isNativePlatform()) {
-    alert("Notifications work only on native device");
+    alert("Not native platform!");
     return;
   }
   try {
     const perm = await LocalNotifications.requestPermissions();
+    const pending = await LocalNotifications.getPending();
+
     if (perm.display !== "granted") {
-      alert("Notification permission denied. Enable it in iOS Settings.");
+      alert(`Permission: ${perm.display}\nGo to iOS Settings → Sayday → Notifications`);
       return;
     }
+
+    await LocalNotifications.cancel({
+      notifications: pending.notifications.map((n) => ({ id: n.id })),
+    });
+
     await LocalNotifications.schedule({
       notifications: [
         {
-          id: 99999,
-          title: "Sayday Test 🔔",
-          body: "Notifications are working!",
+          id: 88888,
+          title: "Sayday Alarm 🔔",
+          body: "Alarm is working!",
           schedule: { at: new Date(Date.now() + 10000) },
         },
       ],
     });
-    alert("Test notification scheduled in 10 seconds. Lock your phone now.");
+
+    const after = await LocalNotifications.getPending();
+    alert(
+      `Permission: ${perm.display}\n` +
+      `Pending before: ${pending.notifications.length}\n` +
+      `Pending after: ${after.notifications.length}\n` +
+      `→ Lock phone now, wait 10 seconds`
+    );
   } catch (e: any) {
     alert("Error: " + (e?.message || JSON.stringify(e)));
   }
