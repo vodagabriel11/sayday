@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/components/theme-provider";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +11,7 @@ import {
   Loader2, Crown, Eye, EyeOff, Star, MessageSquare, BookOpen, Zap, Check
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { testNotification } from "@/lib/notification-service";
 
 type SettingsScreen = "main" | "profile" | "subscription" | "notifications" | "appearance" | "privacy" | "support";
 
@@ -432,6 +433,12 @@ function NotificationsScreen({ onBack }: { onBack: () => void }) {
           <Toggle checked={user.notifDailySummary} onChange={v => updateProfileMutation.mutate({ notifDailySummary: v })} />
         </SettingItem>
       </div>
+      <button
+        onClick={testNotification}
+        className="mt-4 w-full py-3 rounded-xl bg-primary/10 text-primary font-medium text-sm"
+      >
+        Test Notification (10s)
+      </button>
     </>
   );
 }
