@@ -787,21 +787,6 @@ export default function Home() {
           )}
         </div>
       </div>
-      {weeklyTasks && weeklyTasks.limit !== null && (
-        <div className="w-full max-w-lg px-1 pb-4">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[11px] text-muted-foreground">Free plan</span>
-            <span className="text-[11px] text-muted-foreground font-medium">{weeklyTasks.count}/{weeklyTasks.limit} tasks this week</span>
-          </div>
-          <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-            <div
-              className="h-full bg-primary rounded-full transition-all"
-              style={{ width: `${Math.min(100, (weeklyTasks.count / weeklyTasks.limit) * 100)}%` }}
-            />
-          </div>
-        </div>
-      )}
-
       {current && showEditDialog && (
         <ConfirmEditSheet
           data={current}

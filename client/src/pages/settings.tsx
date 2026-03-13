@@ -251,6 +251,10 @@ function ProfileScreen({ onBack }: { onBack: () => void }) {
 function SubscriptionScreen({ onBack }: { onBack: () => void }) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { data: weeklyTasks } = useQuery<{ count: number; limit: number | null }>({
+    queryKey: ["/api/auth/weekly-tasks"],
+    enabled: user?.subscriptionPlan === "free",
+  });
   const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
 
   const monthlyPrice = 8.99;
@@ -285,6 +289,22 @@ function SubscriptionScreen({ onBack }: { onBack: () => void }) {
   return (
     <>
       <SubScreenHeader title="My Plan" onBack={onBack} />
+
+      {user.subscriptionPlan === "free" && weeklyTasks && weeklyTasks.limit !== null && (
+        <div className="mb-5 p-4 rounded-xl bg-muted/50 border border-border">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-foreground">Tasks this week</span>
+            <span className="text-sm font-bold text-foreground">{weeklyTasks.count}<span className="text-muted-foreground font-normal">/{weeklyTasks.limit}</span></span>
+          </div>
+          <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+            <div
+              className="h-full bg-primary rounded-full transition-all"
+              style={{ width: `${Math.min(100, (weeklyTasks.count / weeklyTasks.limit) * 100)}%` }}
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1.5">Resets every Monday</p>
+        </div>
+      )}
 
       <div className="flex bg-muted rounded-lg p-1 mb-5" data-testid="billing-toggle">
         <button
