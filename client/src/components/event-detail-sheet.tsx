@@ -68,16 +68,23 @@ export function EventDetailSheet({ item, open, onOpenChange }: EventDetailSheetP
     if (item) {
       setTitle(item.title);
       if (item.startAt) {
-        const iso = new Date(item.startAt).toISOString();
-        setDate(iso.slice(0, 10));
-        setTime(iso.slice(11, 16));
+        const d = new Date(item.startAt);
+        const yyyy = d.getFullYear();
+        const mo = (d.getMonth() + 1).toString().padStart(2, "0");
+        const dd = d.getDate().toString().padStart(2, "0");
+        const hh = d.getHours().toString().padStart(2, "0");
+        const mm = d.getMinutes().toString().padStart(2, "0");
+        setDate(`${yyyy}-${mo}-${dd}`);
+        setTime(`${hh}:${mm}`);
       } else {
         setDate("");
         setTime("");
       }
       if (item.endAt) {
-        const endIso = new Date(item.endAt).toISOString();
-        setEndTime(endIso.slice(11, 16));
+        const ed = new Date(item.endAt);
+        const ehh = ed.getHours().toString().padStart(2, "0");
+        const emm = ed.getMinutes().toString().padStart(2, "0");
+        setEndTime(`${ehh}:${emm}`);
       } else {
         setEndTime("");
       }
@@ -104,10 +111,14 @@ export function EventDetailSheet({ item, open, onOpenChange }: EventDetailSheetP
       if (!item) return;
       const data: any = { title, recurringInterval: recurringInterval || null };
       if (date && time) {
-        data.startAt = `${date}T${time}:00Z`;
+        const [y, mo, d] = date.split("-").map(Number);
+        const [h, m] = time.split(":").map(Number);
+        data.startAt = new Date(y, mo - 1, d, h, m, 0).toISOString();
       }
       if (date && endTime) {
-        data.endAt = `${date}T${endTime}:00Z`;
+        const [y, mo, d] = date.split("-").map(Number);
+        const [h, m] = endTime.split(":").map(Number);
+        data.endAt = new Date(y, mo - 1, d, h, m, 0).toISOString();
       }
       return apiRequest("PATCH", `/api/items/${item.id}`, data);
     },
