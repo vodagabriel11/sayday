@@ -43,7 +43,7 @@ export async function testNotification(): Promise<void> {
           title: "Sayday Alarm 🔔",
           body: "Alarm is working!",
           schedule: { at: new Date(Date.now() + 10000) },
-          sound: "alarm.caf",
+          sound: "alarm",
         },
       ],
     });
@@ -93,7 +93,7 @@ export async function scheduleItemNotifications(
       title: item.title,
       body,
       schedule: { at: fireAt },
-      sound: isVibrate ? undefined : "alarm.caf",
+      sound: isVibrate ? undefined : "alarm",
       extra: { itemId: item.id, notifType: r.type },
     };
 
