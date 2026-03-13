@@ -40,8 +40,8 @@ function formatHour(hour: number, use24h = false) {
 
 function formatTimeShort(date: Date | string, use24h = false) {
   const d = new Date(date);
-  const h = d.getUTCHours();
-  const m = d.getUTCMinutes();
+  const h = d.getHours();
+  const m = d.getMinutes();
   if (use24h) return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
   const ampm = h >= 12 ? "PM" : "AM";
   const h12 = h % 12 || 12;
@@ -363,9 +363,9 @@ export default function Today() {
   const isDateToday = (d: Date | string) => {
     const date = new Date(d);
     const now = new Date();
-    return date.getUTCFullYear() === now.getFullYear() &&
-      date.getUTCMonth() === now.getMonth() &&
-      date.getUTCDate() === now.getDate();
+    return date.getFullYear() === now.getFullYear() &&
+      date.getMonth() === now.getMonth() &&
+      date.getDate() === now.getDate();
   };
 
   const todayItems = allItems?.filter((item) => {
@@ -407,8 +407,8 @@ export default function Today() {
       if (!item.startAt || item.isDone || autoMarkedRef.current.has(item.id) || recentlyDroppedRef.current.has(item.id)) return;
       if (item.type !== "event" && item.type !== "reminder") return;
       const d = new Date(item.startAt);
-      const h = d.getUTCHours();
-      const m = d.getUTCMinutes();
+      const h = d.getHours();
+      const m = d.getMinutes();
       if (h < nowH || (h === nowH && m < nowM)) {
         toMark.push(item);
       }
@@ -433,7 +433,7 @@ export default function Today() {
 
   const hoursWithItems = new Set<number>();
   visibleItems.forEach((item) => {
-    if (item.startAt) hoursWithItems.add(new Date(item.startAt).getUTCHours());
+    if (item.startAt) hoursWithItems.add(new Date(item.startAt).getHours());
   });
 
   const now = new Date();
@@ -509,9 +509,9 @@ export default function Today() {
 
     const oldDate = new Date(item.startAt);
     const newDate = new Date(oldDate);
-    newDate.setUTCHours(hour);
-    newDate.setUTCMinutes(minute);
-    newDate.setUTCSeconds(0);
+    newDate.setHours(hour);
+    newDate.setMinutes(minute);
+    newDate.setSeconds(0);
 
     let newEndAt = null;
     if (item.endAt) {
@@ -672,7 +672,7 @@ export default function Today() {
             const isHoveredHour = dragHoverTime?.hour === hour;
             const hourItems = visibleItems.filter((item) => {
               if (!item.startAt) return false;
-              return new Date(item.startAt).getUTCHours() === hour;
+              return new Date(item.startAt).getHours() === hour;
             }).sort((a, b) => new Date(a.startAt!).getTime() - new Date(b.startAt!).getTime());
 
             const dragTimeLabel = isHoveredHour && dragHoverTime ? (() => {
