@@ -3,12 +3,50 @@ import { Calendar, Bell, Check, Clock, X, AlarmClock, Volume2, Vibrate } from "l
 import { alarmService, type AlarmItem, type AlarmMode } from "@/lib/alarm-service";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
+import { Capacitor } from "@capacitor/core";
+import { LocalNotifications } from "@capacitor/local-notifications";
 
 export function AlarmOverlay() {
   const [activeAlarm, setActiveAlarm] = useState<AlarmItem | null>(null);
   const [alarmMode, setAlarmMode] = useState<AlarmMode>("call");
   const [snoozed, setSnoozed] = useState(false);
   const snoozeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const triggerAlarmForItem = useCallback(async (itemId: number, notifType: string) => {
+    try {
+      const res = await fetch(`/api/items/${itemId}`, { credentials: "include" });
+      const item = await res.json();
+      if (!item || !item.id) return;
+      const mode: AlarmMode = notifType === "vibrate" || notifType === "push" ? "vibrate" : "call";
+      setActiveAlarm(item);
+      setAlarmMode(mode);
+      setSnoozed(false);
+      if (mode === "call") alarmService.playSound();
+      else alarmService.startVibrating();
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    let foregroundListener: any;
+    let tapListener: any;
+
+    LocalNotifications.addListener("localNotificationReceived", (notification) => {
+      const { itemId, notifType } = notification.extra || {};
+      if (itemId) triggerAlarmForItem(itemId, notifType || "call");
+    }).then((l) => { foregroundListener = l; });
+
+    LocalNotifications.addListener("localNotificationActionPerformed", (action) => {
+      const { itemId, notifType } = action.notification.extra || {};
+      if (itemId) triggerAlarmForItem(itemId, notifType || "call");
+    }).then((l) => { tapListener = l; });
+
+    return () => {
+      foregroundListener?.remove();
+      tapListener?.remove();
+    };
+  }, [triggerAlarmForItem]);
 
   useEffect(() => {
     alarmService.setReminderTypeFetcher(async (itemId: number) => {

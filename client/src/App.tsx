@@ -22,6 +22,12 @@ import { Chatbox } from "@/components/chatbox";
 import { AlarmOverlay } from "@/components/alarm-overlay";
 import { VoiceConfirmationSheet } from "@/components/voice-confirmation-sheet";
 import { alarmService } from "@/lib/alarm-service";
+import {
+  scheduleItemNotifications,
+  cancelAllItemNotifications,
+  type ReminderNotif,
+} from "@/lib/notification-service";
+import { Capacitor } from "@capacitor/core";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -106,9 +112,40 @@ function AlarmSync() {
   const { data: items } = useQuery<Item[]>({ queryKey: ["/api/items"] });
 
   useEffect(() => {
-    if (items) {
-      alarmService.syncAlarms(items);
-    }
+    if (!items) return;
+
+    alarmService.syncAlarms(items);
+
+    if (!Capacitor.isNativePlatform()) return;
+
+    const activeItems = items.filter(
+      (i) => i.startAt && !i.isDone && (i.type === "event" || i.type === "reminder")
+    );
+
+    cancelAllItemNotifications().then(async () => {
+      if (activeItems.length === 0) return;
+      try {
+        const res = await apiRequest("POST", "/api/items/reminders/batch", {
+          itemIds: activeItems.map((i) => i.id),
+        });
+        const remindersMap = (await res.json()) as Record<number, ReminderNotif[]>;
+        for (const item of activeItems) {
+          const reminders = remindersMap[item.id] || [];
+          await scheduleItemNotifications(
+            item,
+            reminders.length > 0
+              ? reminders
+              : [{ offsetMinutes: 0, type: "call", isEnabled: true }]
+          );
+        }
+      } catch {
+        for (const item of activeItems) {
+          await scheduleItemNotifications(item, [
+            { offsetMinutes: 0, type: "call", isEnabled: true },
+          ]);
+        }
+      }
+    });
   }, [items]);
 
   return null;

@@ -1,3 +1,6 @@
+import { Capacitor } from "@capacitor/core";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
+
 export type AlarmItem = {
   id: number;
   type: string;
@@ -162,12 +165,19 @@ class AlarmService {
     this.vibratePattern();
   }
 
-  private vibratePattern() {
+  private async vibratePattern() {
     if (!this.isVibrating) return;
-    if (navigator.vibrate) {
+    if (Capacitor.isNativePlatform()) {
+      for (let i = 0; i < 3 && this.isVibrating; i++) {
+        await Haptics.impact({ style: ImpactStyle.Heavy });
+        await new Promise((r) => setTimeout(r, 200));
+      }
+    } else if (navigator.vibrate) {
       navigator.vibrate([300, 200, 300, 200, 300]);
     }
-    this.vibrateTimer = setTimeout(() => this.vibratePattern(), 3000);
+    if (this.isVibrating) {
+      this.vibrateTimer = setTimeout(() => this.vibratePattern(), 2000);
+    }
   }
 
   startVibrating() {
