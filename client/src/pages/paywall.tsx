@@ -41,7 +41,7 @@ export default function Paywall({ message }: { message?: string }) {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-md mx-auto px-4 pb-24">
-        <div className="flex items-center gap-3 py-4 sticky top-0 bg-background z-10">
+        <div className="flex items-center gap-3 py-4 sticky top-0 bg-background z-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}>
           <button onClick={() => navigate(-1 as any)} className="p-2 -ml-2 rounded-lg hover:bg-muted" data-testid="button-back">
             <ArrowLeft className="w-5 h-5" />
           </button>

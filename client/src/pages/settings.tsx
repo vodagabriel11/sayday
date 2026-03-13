@@ -16,7 +16,7 @@ type SettingsScreen = "main" | "profile" | "subscription" | "notifications" | "a
 
 function SubScreenHeader({ title, onBack }: { title: string; onBack: () => void }) {
   return (
-    <div className="flex items-center gap-3 py-4 sticky top-0 bg-background z-10">
+    <div className="flex items-center gap-3 py-4 sticky top-0 bg-background z-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}>
       <button onClick={onBack} className="p-2 -ml-2 rounded-lg hover:bg-muted" data-testid="button-back-sub">
         <ArrowLeft className="w-5 h-5" />
       </button>
@@ -578,7 +578,7 @@ export default function Settings() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-md mx-auto px-4 pb-24">
-        <div className="flex items-center gap-3 py-4 sticky top-0 bg-background z-10">
+        <div className="flex items-center gap-3 py-4 sticky top-0 bg-background z-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}>
           <button onClick={() => navigate("/")} className="p-2 -ml-2 rounded-lg hover:bg-muted" data-testid="button-back">
             <ArrowLeft className="w-5 h-5" />
           </button>

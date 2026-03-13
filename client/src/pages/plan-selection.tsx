@@ -48,7 +48,7 @@ export default function PlanSelection() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-md mx-auto px-4 pb-8">
-        <div className="pt-8 pb-4 text-center">
+        <div className="pb-4 text-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 2rem)' }}>
           <div className="flex items-center justify-center mb-2">
             <img src={saydayLogo} alt="sayday" className="h-8 dark:invert" />
           </div>

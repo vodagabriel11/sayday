@@ -657,7 +657,7 @@ export function Chatbox({ open, onClose, onNavigateToNote }: ChatboxProps) {
 
   return (
     <div className={cn("fixed inset-0 z-[60] flex flex-col bg-background", !open && "hidden")} data-testid="chatbox-panel">
-      <div className="flex items-center justify-between px-4 py-3 border-b bg-primary/5">
+      <div className="flex items-center justify-between px-4 py-3 border-b bg-primary/5" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.75rem)' }}>
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
             <Bot className="w-4 h-4 text-primary-foreground" />

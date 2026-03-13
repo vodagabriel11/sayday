@@ -295,7 +295,7 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <div className="flex-1 flex flex-col justify-center px-6 py-8 max-w-md mx-auto w-full">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-3">

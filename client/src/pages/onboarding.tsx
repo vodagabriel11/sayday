@@ -46,7 +46,7 @@ export default function Onboarding() {
   const Icon = slide.icon;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <div className="flex-1 flex flex-col justify-center px-8 max-w-md mx-auto w-full">
         <div className="flex flex-col items-center text-center">
           <div className={cn("w-24 h-24 rounded-3xl flex items-center justify-center mb-8", slide.color)}>
