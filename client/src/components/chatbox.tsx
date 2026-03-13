@@ -316,17 +316,20 @@ export function Chatbox({ open, onClose, onNavigateToNote }: ChatboxProps) {
   const parseMutation = useMutation({
     mutationFn: async (input: string) => {
       const res = await apiRequest("POST", "/api/parse-intent", { text: input });
-      return res.json();
+      return res.json() as Promise<ParseIntentResponse[]>;
     },
-    onSuccess: (data: ParseIntentResponse, input: string) => {
-      if (data.action === "update" && data.searchTitle) {
-        const match = findMatchingItem(data.searchTitle);
-        if (match) {
-          updateItemMutation.mutate({ item: match, data, transcript: input });
-          return;
+    onSuccess: (data: ParseIntentResponse[], input: string) => {
+      if (!data || data.length === 0) return;
+      for (const item of data) {
+        if (item.action === "update" && item.searchTitle) {
+          const match = findMatchingItem(item.searchTitle);
+          if (match) {
+            updateItemMutation.mutate({ item: match, data: item, transcript: input });
+            continue;
+          }
         }
+        createMutation.mutate({ data: item, transcript: input });
       }
-      createMutation.mutate({ data, transcript: input });
     },
     onError: () => {
       setPendingMessages((prev) => [

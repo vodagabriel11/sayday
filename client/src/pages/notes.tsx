@@ -55,10 +55,11 @@ export default function Notes() {
   const parseMutation = useMutation({
     mutationFn: async (input: string) => {
       const res = await apiRequest("POST", "/api/parse-intent", { text: `note: ${input}` });
-      return res.json();
+      return res.json() as Promise<ParseIntentResponse[]>;
     },
-    onSuccess: (data: ParseIntentResponse) => {
-      createMutation.mutate({ data, transcript: noteText });
+    onSuccess: (data: ParseIntentResponse[]) => {
+      if (!data || data.length === 0) return;
+      createMutation.mutate({ data: data[0], transcript: noteText });
     },
     onError: () => {
       toast({ title: "Error", description: "Could not process your input.", variant: "destructive" });
