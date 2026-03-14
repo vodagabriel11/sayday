@@ -8,6 +8,25 @@ export type ReminderNotif = {
   isEnabled: boolean;
 };
 
+const ALARM_CHANNEL_ID = "sayday_alarm";
+
+export async function createNotificationChannels(): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  if (Capacitor.getPlatform() !== "android") return;
+  try {
+    await LocalNotifications.createChannel({
+      id: ALARM_CHANNEL_ID,
+      name: "Reminders & Alarms",
+      description: "Alarm notifications for reminders and events",
+      importance: 5,       // IMPORTANCE_HIGH (bypasses DND on Android)
+      visibility: 1,       // VISIBILITY_PUBLIC (shows on lock screen)
+      sound: "alarm",      // references res/raw/alarm.wav
+      vibration: true,
+      lights: true,
+    });
+  } catch {}
+}
+
 export async function requestNotificationPermission(): Promise<boolean> {
   if (!Capacitor.isNativePlatform()) return false;
   try {
@@ -28,7 +47,7 @@ export async function testNotification(): Promise<void> {
     const pending = await LocalNotifications.getPending();
 
     if (perm.display !== "granted") {
-      alert(`Permission: ${perm.display}\nGo to iOS Settings → Sayday → Notifications`);
+      alert(`Permission: ${perm.display}\nGo to Settings → Sayday → Notifications`);
       return;
     }
 
@@ -36,17 +55,19 @@ export async function testNotification(): Promise<void> {
       notifications: pending.notifications.map((n) => ({ id: n.id })),
     });
 
-    await LocalNotifications.schedule({
-      notifications: [
-        {
-          id: 88888,
-          title: "Sayday Alarm 🔔",
-          body: "Alarm is working!",
-          schedule: { at: new Date(Date.now() + 10000) },
-          sound: "alarm",
-        },
-      ],
-    });
+    const notif: any = {
+      id: 88888,
+      title: "⏰ Sayday Alarm",
+      body: "Alarm is working!",
+      schedule: { at: new Date(Date.now() + 10000) },
+      sound: Capacitor.getPlatform() === "ios" ? "alarm.caf" : "alarm",
+      extra: { itemId: 0, notifType: "call" },
+    };
+    if (Capacitor.getPlatform() === "android") {
+      notif.channelId = ALARM_CHANNEL_ID;
+    }
+
+    await LocalNotifications.schedule({ notifications: [notif] });
 
     const after = await LocalNotifications.getPending();
     alert(
@@ -70,6 +91,7 @@ export async function scheduleItemNotifications(
   if (perm.display !== "granted") return;
 
   const now = Date.now();
+  const isAndroid = Capacitor.getPlatform() === "android";
   const notifications: any[] = [];
 
   for (let i = 0; i < reminders.length; i++) {
@@ -90,12 +112,16 @@ export async function scheduleItemNotifications(
 
     const notif: any = {
       id,
-      title: item.title,
+      title: item.emoji ? `${item.emoji} ${item.title}` : item.title,
       body,
       schedule: { at: fireAt },
-      sound: isVibrate ? undefined : "alarm",
+      sound: isVibrate ? undefined : (isAndroid ? "alarm" : "alarm.caf"),
       extra: { itemId: item.id, notifType: r.type },
     };
+
+    if (isAndroid) {
+      notif.channelId = ALARM_CHANNEL_ID;
+    }
 
     notifications.push(notif);
   }
